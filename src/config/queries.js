@@ -1,12 +1,18 @@
-// src/config/queries.js
+// =============================================================
+// CONFIG: queries.js
+// Centralized SQL query strings, organized by domain.
+// Import the relevant query group in each service file.
+// =============================================================
 
 const AUTH_QUERIES = {
+  // Fetch a single user record by email address
   GET_USER_BY_EMAIL: `
     SELECT * FROM users WHERE email = $1
   `,
 
-  // Institute ka poora data: city, state, logo bhi aa raha hai
-  // Role ka poora data: icon, code, description bhi aa raha hai
+  // Fetch all institute-role mappings for a given user.
+  // Returns full institute details (city, state, logo) and
+  // all associated roles (icon, code, description) grouped per institute.
   GET_MY_INSTITUTES_ROLES: `
     SELECT
       uir.tenant_id,
@@ -36,6 +42,8 @@ const AUTH_QUERIES = {
       i.name, i.type, i.logo, i.city, i.state
   `,
 
+  // Validate that a specific user-tenant-institute-role combination exists
+  // before issuing an access token during context selection
   CHECK_CONTEXT_MAPPING: `
     SELECT * FROM user_institute_roles
     WHERE user_id = $1 AND tenant_id = $2 AND institute_id = $3 AND role_id = $4
@@ -43,6 +51,7 @@ const AUTH_QUERIES = {
 };
 
 const USER_QUERIES = {
+  // Create a new user and return their id, full_name, and email
   CREATE_USER: `
     INSERT INTO users
       (first_name, last_name, full_name, email, mobile, password_hash)
@@ -52,34 +61,45 @@ const USER_QUERIES = {
 };
 
 const INSTITUTE_QUERIES = {
+  // Create a new institute record and return all columns
   CREATE_INSTITUTE: `
     INSERT INTO institutes (tenant_id, name, code, type, logo, city, state)
     VALUES ($1, $2, $3, $4, $5, $6, $7)
     RETURNING *
   `,
+
+  // Fetch all institutes
   GET_ALL_INSTITUTES: `SELECT * FROM institutes`,
 };
 
 const ROLE_QUERIES = {
+  // Create a new role and return all columns
   CREATE_ROLE: `
     INSERT INTO roles (name, code, icon, description)
     VALUES ($1, $2, $3, $4)
     RETURNING *
   `,
+
+  // Fetch all roles
   GET_ALL_ROLES: `SELECT * FROM roles`,
 };
 
 const MAPPING_QUERIES = {
+  // Check if a user-institute-role mapping already exists (prevent duplicates)
   CHECK_DUPLICATE_MAPPING: `
     SELECT * FROM user_institute_roles
     WHERE user_id = $1 AND institute_id = $2 AND role_id = $3
   `,
+
+  // Create a new user-institute-role mapping and return all columns
   CREATE_MAPPING: `
     INSERT INTO user_institute_roles
       (tenant_id, user_id, institute_id, role_id, is_primary)
     VALUES ($1, $2, $3, $4, $5)
     RETURNING *
   `,
+
+  // Fetch all mappings with joined user, institute, and role names
   GET_ALL_MAPPINGS: `
     SELECT
       uir.*,

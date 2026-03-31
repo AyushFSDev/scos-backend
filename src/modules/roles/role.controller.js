@@ -1,23 +1,36 @@
+// =============================================================
+// CONTROLLER: role.controller.js
+// Handles HTTP layer for role routes.
+// Delegates all business logic to role.service.js.
+// =============================================================
+
 const service = require("./role.service");
 
-exports.createRole = async (req, res) => {
+
+// -------------------------------------------------------------
+// POST /roles
+// Creates a new role from the request body.
+// -------------------------------------------------------------
+exports.createRole = async (req, res, next) => {
   try {
     const data = await service.createRole(req.body);
 
     res.status(201).json({
       success: true,
-      message: "Role created",
+      message: "Role created successfully",
       data,
     });
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+    next(err);
   }
 };
 
-exports.getRoles = async (req, res) => {
+
+// -------------------------------------------------------------
+// GET /roles
+// Returns all roles.
+// -------------------------------------------------------------
+exports.getRoles = async (req, res, next) => {
   try {
     const data = await service.getRoles();
 
@@ -26,9 +39,6 @@ exports.getRoles = async (req, res) => {
       data,
     });
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+    next(err);
   }
 };

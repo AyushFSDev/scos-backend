@@ -1,14 +1,18 @@
-// src/config/errors.js
-// =====================================================
-// 📌 CENTRAL ERRORS FILE
-// Saare error codes, messages aur HTTP status yahan hain.
-// Usage: const { AppError, ERRORS } = require("../../config/errors");
-// =====================================================
+// =============================================================
+// CONFIG: errors.js
+// Central error definitions for the entire application.
+//
+// Usage:
+//   const { AppError, ERRORS } = require("../../config/errors");
+//   throw new AppError(ERRORS.USER_NOT_FOUND);
+// =============================================================
 
-// ─────────────────────────────────────────────
-// 🏗️ AppError CLASS
-// Custom error class jo message + statusCode + code rakhti hai
-// ─────────────────────────────────────────────
+
+// -------------------------------------------------------------
+// AppError CLASS
+// Custom error class that carries a statusCode and error code.
+// Thrown from service layer and caught by globalErrorHandler.
+// -------------------------------------------------------------
 class AppError extends Error {
   constructor(errorDef) {
     super(errorDef.message);
@@ -18,12 +22,14 @@ class AppError extends Error {
   }
 }
 
-// ─────────────────────────────────────────────
-// 📋 ERROR DEFINITIONS
-// ─────────────────────────────────────────────
+
+// -------------------------------------------------------------
+// ERROR DEFINITIONS
+// Grouped by domain. Each entry has: code, message, statusCode.
+// -------------------------------------------------------------
 const ERRORS = {
 
-  // ── AUTH ERRORS ──────────────────────────────
+  // -- AUTH ERRORS ---------------------------------------------
   INVALID_CREDENTIALS: {
     code: "AUTH_001",
     message: "Invalid email or password.",
@@ -60,7 +66,7 @@ const ERRORS = {
     statusCode: 401,
   },
 
-  // ── USER ERRORS ──────────────────────────────
+  // -- USER ERRORS ---------------------------------------------
   USER_ALREADY_EXISTS: {
     code: "USER_001",
     message: "A user with this email already exists.",
@@ -72,7 +78,7 @@ const ERRORS = {
     statusCode: 500,
   },
 
-  // ── INSTITUTE ERRORS ─────────────────────────
+  // -- INSTITUTE ERRORS ----------------------------------------
   INSTITUTE_NOT_FOUND: {
     code: "INST_001",
     message: "Institute not found.",
@@ -84,7 +90,7 @@ const ERRORS = {
     statusCode: 500,
   },
 
-  // ── ROLE ERRORS ──────────────────────────────
+  // -- ROLE ERRORS ---------------------------------------------
   ROLE_NOT_FOUND: {
     code: "ROLE_001",
     message: "Role not found.",
@@ -96,7 +102,7 @@ const ERRORS = {
     statusCode: 500,
   },
 
-  // ── MAPPING ERRORS ───────────────────────────
+  // -- MAPPING ERRORS ------------------------------------------
   MAPPING_ALREADY_EXISTS: {
     code: "MAP_001",
     message: "This user-institute-role mapping already exists.",
@@ -108,7 +114,7 @@ const ERRORS = {
     statusCode: 500,
   },
 
-  // ── GENERIC ERRORS ───────────────────────────
+  // -- GENERIC ERRORS ------------------------------------------
   INTERNAL_SERVER_ERROR: {
     code: "SERVER_001",
     message: "Something went wrong. Please try again later.",
@@ -121,13 +127,14 @@ const ERRORS = {
   },
 };
 
-// ─────────────────────────────────────────────
-// 🛡️ GLOBAL ERROR HANDLER MIDDLEWARE
-// app.js mein sabse last mein add karo:
-// app.use(globalErrorHandler);
-// ─────────────────────────────────────────────
+
+// -------------------------------------------------------------
+// GLOBAL ERROR HANDLER MIDDLEWARE
+// Must be registered last in app.js:  app.use(globalErrorHandler)
+// Handles AppError, JWT errors, and all unexpected errors.
+// -------------------------------------------------------------
 const globalErrorHandler = (err, req, res, next) => {
-  // Agar AppError hai to uska hi statusCode use karo
+  // Known application errors thrown via AppError
   if (err.name === "AppError") {
     return res.status(err.statusCode).json({
       success: false,
@@ -136,7 +143,7 @@ const globalErrorHandler = (err, req, res, next) => {
     });
   }
 
-  // JWT errors
+  // JWT-specific errors: invalid signature or expired token
   if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError") {
     const e = ERRORS.INVALID_TOKEN;
     return res.status(e.statusCode).json({
@@ -146,7 +153,7 @@ const globalErrorHandler = (err, req, res, next) => {
     });
   }
 
-  // Baaki unexpected errors
+  // Unexpected / unhandled errors — log and return generic response
   console.error("Unhandled Error:", err);
   const e = ERRORS.INTERNAL_SERVER_ERROR;
   return res.status(e.statusCode).json({

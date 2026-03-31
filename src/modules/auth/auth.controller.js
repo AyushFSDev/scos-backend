@@ -1,7 +1,19 @@
+// =============================================================
+// CONTROLLER: auth.controller.js
+// Handles HTTP layer for authentication routes.
+// Delegates all business logic to auth.service.js.
+// =============================================================
+
 const service = require("./auth.service");
 const jwt = require("jsonwebtoken");
+const { AppError, ERRORS } = require("../../config/errors");
 
-exports.login = async (req, res) => {
+
+// -------------------------------------------------------------
+// POST /auth/login
+// Accepts email and password, returns a pre_context token.
+// -------------------------------------------------------------
+exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -18,16 +30,24 @@ exports.login = async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(401).json({
-      success: false,
-      message: err.message,
-    });
+    next(err);
   }
 };
 
-exports.getMyInstitutesRoles = async (req, res) => {
+
+// -------------------------------------------------------------
+// GET /auth/my-institutes-roles
+// Reads the pre_context token and returns all institute-role
+// options assigned to the user, for the context-selection screen.
+// -------------------------------------------------------------
+exports.getMyInstitutesRoles = async (req, res, next) => {
   try {
-    const token = req.headers.authorization.split(" ")[1];
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      throw new AppError(ERRORS.MISSING_TOKEN);
+    }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const data = await service.getMyInstitutesRoles(decoded.user_id);
@@ -37,20 +57,29 @@ exports.getMyInstitutesRoles = async (req, res) => {
       data,
     });
   } catch (err) {
-    res.status(401).json({ message: err.message });
+    next(err);
   }
 };
 
-exports.selectContext = async (req, res) => {
+
+// -------------------------------------------------------------
+// POST /auth/select-context
+// Validates the pre_context token, confirms the chosen mapping,
+// and returns a full access token with the selected context embedded.
+// -------------------------------------------------------------
+exports.selectContext = async (req, res, next) => {
   try {
-    const token = req.headers.authorization.split(" ")[1];
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      throw new AppError(ERRORS.MISSING_TOKEN);
+    }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    // Only pre_context tokens are accepted at this stage
     if (decoded.token_type !== "pre_context") {
-      return res.status(403).json({
-        success: false,
-        message: "Invalid token type",
-      });
+      throw new AppError(ERRORS.TOKEN_TYPE_MISMATCH);
     }
 
     const { tenant_id, institute_id, role_id } = req.body;
@@ -72,14 +101,15 @@ exports.selectContext = async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(400).json({
-      success: false,
-      message: err.message,
-    });
+    next(err);
   }
 };
 
 
+// -------------------------------------------------------------
+// GET /auth/me  (protected — requires authMiddleware)
+// Returns the decoded token payload attached by authMiddleware.
+// -------------------------------------------------------------
 exports.me = (req, res) => {
   res.json({
     success: true,

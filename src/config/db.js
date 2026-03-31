@@ -1,3 +1,9 @@
+// =============================================================
+// CONFIG: db.js
+// Creates and exports a PostgreSQL connection pool.
+// All database modules import this pool to run queries.
+// =============================================================
+
 const { Pool } = require("pg");
 
 const pool = new Pool({

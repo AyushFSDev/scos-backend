@@ -1,34 +1,36 @@
+// =============================================================
+// MIDDLEWARE: authMiddleware.js
+// Verifies the JWT access token on protected routes.
+// Attaches decoded user context to req.user for downstream use.
+// =============================================================
+
 const jwt = require("jsonwebtoken");
+const { AppError, ERRORS } = require("../config/errors");
 
 module.exports = (req, res, next) => {
   try {
+    // Extract Bearer token from Authorization header
     const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "No token provided",
-      });
+      throw new AppError(ERRORS.MISSING_TOKEN);
     }
 
+    // Verify token signature and expiry
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // 🔒 Only access token allowed
+    // Only "access" tokens are allowed on protected routes.
+    // "pre_context" tokens must first go through /select-context.
     if (decoded.token_type !== "access") {
-      return res.status(403).json({
-        success: false,
-        message: "Invalid token type",
-      });
+      throw new AppError(ERRORS.TOKEN_TYPE_MISMATCH);
     }
 
-    // ✅ attach user context
+    // Attach decoded payload to request for use in controllers
     req.user = decoded;
 
     next();
   } catch (err) {
-    return res.status(401).json({
-      success: false,
-      message: "Unauthorized",
-    });
+    // Delegate all errors (AppError, JWT errors) to the global error handler
+    next(err);
   }
 };

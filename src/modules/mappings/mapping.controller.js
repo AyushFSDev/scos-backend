@@ -1,27 +1,44 @@
+// =============================================================
+// CONTROLLER: mapping.controller.js
+// Handles HTTP layer for mapping routes.
+// Delegates all business logic to mapping.service.js.
+// =============================================================
+
 const service = require("./mapping.service");
 
-exports.createMapping = async (req, res) => {
+
+// -------------------------------------------------------------
+// POST /mappings
+// Creates a new user-institute-role mapping from the request body.
+// -------------------------------------------------------------
+exports.createMapping = async (req, res, next) => {
   try {
     const data = await service.createMapping(req.body);
 
     res.status(201).json({
       success: true,
-      message: "Mapping created",
+      message: "Mapping created successfully",
       data,
     });
   } catch (err) {
-    res.status(400).json({
-      success: false,
-      message: err.message,
-    });
+    next(err);
   }
 };
 
-exports.getMappings = async (req, res) => {
-  const data = await service.getMappings();
 
-  res.json({
-    success: true,
-    data,
-  });
+// -------------------------------------------------------------
+// GET /mappings
+// Returns all mappings with joined user, institute, and role info.
+// -------------------------------------------------------------
+exports.getMappings = async (req, res, next) => {
+  try {
+    const data = await service.getMappings();
+
+    res.json({
+      success: true,
+      data,
+    });
+  } catch (err) {
+    next(err);
+  }
 };

@@ -1,42 +1,53 @@
-const pool = require("../../config/db");
+// =============================================================
+// SERVICE: mapping.service.js
+// Handles user-institute-role mapping business logic.
+// =============================================================
 
+const pool = require("../../config/db");
+const { AppError, ERRORS } = require("../../config/errors");
+const { MAPPING_QUERIES } = require("../../config/queries");
+
+
+// -------------------------------------------------------------
+// CREATE MAPPING
+// Assigns a user to an institute with a specific role.
+// Throws if the mapping already exists to prevent duplicates.
+// -------------------------------------------------------------
 exports.createMapping = async (data) => {
   const { tenant_id, user_id, institute_id, role_id, is_primary } = data;
 
-  // 🔒 Validation: check mapping exists
-  const check = await pool.query(
-    `SELECT * FROM user_institute_roles
-     WHERE user_id=$1 AND institute_id=$2 AND role_id=$3`,
-    [user_id, institute_id, role_id]
-  );
+  // Check for an existing mapping before inserting
+  const check = await pool.query(MAPPING_QUERIES.CHECK_DUPLICATE_MAPPING, [
+    user_id,
+    institute_id,
+    role_id,
+  ]);
 
   if (check.rows.length > 0) {
-    throw new Error("Mapping already exists");
+    throw new AppError(ERRORS.MAPPING_ALREADY_EXISTS);
   }
 
-  const result = await pool.query(
-    `INSERT INTO user_institute_roles
-    (tenant_id, user_id, institute_id, role_id, is_primary)
-    VALUES ($1, $2, $3, $4, $5)
-    RETURNING *`,
-    [tenant_id, user_id, institute_id, role_id, is_primary]
-  );
+  try {
+    const result = await pool.query(MAPPING_QUERIES.CREATE_MAPPING, [
+      tenant_id,
+      user_id,
+      institute_id,
+      role_id,
+      is_primary ?? false,
+    ]);
 
-  return result.rows[0];
+    return result.rows[0];
+  } catch (err) {
+    throw new AppError(ERRORS.MAPPING_CREATE_FAILED);
+  }
 };
 
-exports.getMappings = async () => {
-  const result = await pool.query(`
-    SELECT 
-      uir.*,
-      u.full_name,
-      i.name as institute_name,
-      r.name as role_name
-    FROM user_institute_roles uir
-    JOIN users u ON u.id = uir.user_id
-    JOIN institutes i ON i.id = uir.institute_id
-    JOIN roles r ON r.id = uir.role_id
-  `);
 
+// -------------------------------------------------------------
+// GET ALL MAPPINGS
+// Returns all mappings joined with user, institute, and role names.
+// -------------------------------------------------------------
+exports.getMappings = async () => {
+  const result = await pool.query(MAPPING_QUERIES.GET_ALL_MAPPINGS);
   return result.rows;
 };

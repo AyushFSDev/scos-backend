@@ -1,6 +1,17 @@
+// =============================================================
+// CONTROLLER: user.controller.js
+// Handles HTTP layer for user routes.
+// Delegates all business logic to user.service.js.
+// =============================================================
+
 const userService = require("./user.service");
 
-exports.createUser = async (req, res) => {
+
+// -------------------------------------------------------------
+// POST /users
+// Creates a new user from the request body.
+// -------------------------------------------------------------
+exports.createUser = async (req, res, next) => {
   try {
     const user = await userService.createUser(req.body);
 
@@ -9,11 +20,7 @@ exports.createUser = async (req, res) => {
       message: "User created successfully",
       data: user,
     });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-      error_code: "USER_CREATE_FAILED",
-    });
+  } catch (err) {
+    next(err);
   }
 };
