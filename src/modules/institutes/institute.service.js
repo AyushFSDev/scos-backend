@@ -28,7 +28,8 @@ exports.createInstitute = async (data) => {
 
     return result.rows[0];
   } catch (err) {
-    throw new AppError(ERRORS.INSTITUTE_CREATE_FAILED);
+    console.error("DB ERROR:", err.message);
+    throw new AppError(err.message);
   }
 };
 
