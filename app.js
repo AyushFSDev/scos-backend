@@ -8,7 +8,10 @@ const app = express();
 // ─── CORS ─────────────────────────────────────────────
 // React dev server (port 3000) allow karo
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: [
+    "http://localhost:3000",
+    "https://your-netlify-app.netlify.app"
+  ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
