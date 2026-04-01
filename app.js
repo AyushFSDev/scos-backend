@@ -10,7 +10,7 @@ const app = express();
 app.use(cors({
   origin: [
     "http://localhost:3000",
-    "https://mentrixos-roles-login.netlify.app/"
+    "https://mentrixos-roles-login.netlify.app"
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
