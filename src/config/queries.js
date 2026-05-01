@@ -57,7 +57,11 @@ const USER_QUERIES = {
       (first_name, last_name, full_name, email, mobile, password_hash)
     VALUES ($1, $2, $3, $4, $5, $6)
     RETURNING id, full_name, email
+    
   `,
+
+  // Fetch all users
+  GET_ALL_USERS: `SELECT * FROM users`,
 };
 
 const INSTITUTE_QUERIES = {

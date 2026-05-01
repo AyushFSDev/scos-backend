@@ -39,3 +39,4 @@ exports.createUser = async (data) => {
     throw new AppError(ERRORS.USER_CREATE_FAILED);
   }
 };
+
