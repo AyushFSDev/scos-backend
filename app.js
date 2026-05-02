@@ -6,7 +6,7 @@ const { globalErrorHandler } = require("./src/config/errors");
 const app = express();
 
 // ─── CORS ─────────────────────────────────────────────
-// React dev server (port 3000) allow karo
+// React dev server (port 3000) allow 
 app.use(cors({
   origin: [
     "http://localhost:3000",
@@ -38,7 +38,6 @@ app.get("/", (req, res) => {
 });
 
 // ─── GLOBAL ERROR HANDLER ─────────────────────────────
-// Sabse last mein hona chahiye
 app.use(globalErrorHandler);
 
 module.exports = app;

@@ -8,7 +8,6 @@ const service = require("./auth.service");
 const jwt = require("jsonwebtoken");
 const { AppError, ERRORS } = require("../../config/errors");
 
-
 // -------------------------------------------------------------
 // POST /auth/login
 // Accepts email and password, returns a pre_context token.
@@ -33,7 +32,6 @@ exports.login = async (req, res, next) => {
     next(err);
   }
 };
-
 
 // -------------------------------------------------------------
 // GET /auth/my-institutes-roles
@@ -61,7 +59,6 @@ exports.getMyInstitutesRoles = async (req, res, next) => {
   }
 };
 
-
 // -------------------------------------------------------------
 // POST /auth/select-context
 // Validates the pre_context token, confirms the chosen mapping,
@@ -88,7 +85,7 @@ exports.selectContext = async (req, res, next) => {
       decoded.user_id,
       tenant_id,
       institute_id,
-      role_id
+      role_id,
     );
 
     res.json({
@@ -104,7 +101,6 @@ exports.selectContext = async (req, res, next) => {
     next(err);
   }
 };
-
 
 // -------------------------------------------------------------
 // GET /auth/me  (protected — requires authMiddleware)
